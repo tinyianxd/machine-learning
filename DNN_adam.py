@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 
 # merge conflict fix
 
+
 dataset_path = 'selfcode\melb_data.csv'
 
 # print(dataset_path)
