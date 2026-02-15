@@ -6,6 +6,8 @@ from sklearn.preprocessing import StandardScaler
 
 # test commit 1
 
+# test commit 2
+
 dataset_path = 'selfcode\melb_data.csv'
 
 # print(dataset_path)
