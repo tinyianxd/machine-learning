@@ -335,14 +335,6 @@ model.add(Layer(10, 10))
 model.add(Layer(10, 10))
 model.add(Layer(10, 10))
 model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-
-
 
 
 model.train(dataset_x_train, dataset_y_train, 10, 100)
