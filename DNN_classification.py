@@ -23,6 +23,14 @@ x_vars = ['radius_mean', 'texture_mean', 'perimeter_mean',
        'compactness_worst', 'concavity_worst', 'concave points_worst',
        'symmetry_worst', 'fractal_dimension_worst']
 
+#scale
+
+for var in x_vars:
+    _mean = np.mean(dataset[var])
+    _std = np.std(dataset[var])
+    dataset[var] -= _mean
+    dataset[var] /= _std
+
 
 y_vars = 'diagnosis'
 
@@ -35,15 +43,6 @@ for var in x_vars:
 
 for data in tmp:
     dataset_x.append(np.array(data))
-
-#scale
-
-for i, data in enumerate(dataset_x):
-    _mean = np.mean(data)
-    _std = np.std(data)
-    dataset_x[i] -= _mean
-    dataset_x[i] /= _std
-
 
 dataset_y = dataset[y_vars]
 
@@ -355,8 +354,6 @@ class Model:
     
 model = Model()
 model.add(Layer(len(x_vars), 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
 model.add(Layer(10, 10))
 model.add(Layer(10, 10))
 
