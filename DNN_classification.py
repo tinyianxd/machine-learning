@@ -203,7 +203,7 @@ class Model:
         if type == 'mse':
             return (x - y)**2
         if type == 'cross-entropy':
-            return -y * np.log(x)
+            return -(y * np.log(x) + (1 - y) * np.log(1 - x))
 
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
@@ -224,7 +224,7 @@ class Model:
 
         y_p = X.dot(self.weight) + self.bias
         y_p = self.sigmoid(y_p)
-        dcz = -data_y * (1 - y_p)
+        dcz = (data_y - y_p)
         dselfw = dcz * X
         dselfb = dcz
         dx = dcz*self.weight
@@ -331,17 +331,16 @@ class Model:
                 accuracy += 1
             if z < 0.5 and y == 0:
                 accuracy += 1
-            loss += self.cost(self.evaluate(X), y, type='cross-entropy') / data_size
+            loss += self.cost(self.sigmoid(self.evaluate(X)), y, type='cross-entropy') / data_size
         accuracy /= data_size
         return accuracy * 100, loss
     
     
 model = Model()
-model.add(Layer(len(x_vars), 20))
-model.add(Layer(20, 20))
-model.add(Layer(20, 20))
-model.add(Layer(20, 20))
-model.add(Layer(20, 20))
+model.add(Layer(len(x_vars), 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+
 
 
 model.train(dataset_x_train, dataset_y_train, 40, 1000)
