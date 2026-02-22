@@ -1,18 +1,23 @@
 import pandas as pd
 import numpy as np
 import random
-from sklearn.preprocessing import StandardScaler
+# from sklearn.preprocessing import StandardScaler
 
-dataset_path = 'selfcode\melb_data.csv'
+dataset_path = 'data.csv'
 
-# print(dataset_path)
+
+
+print(dataset_path)
 
 dataset = pd.read_csv(dataset_path)
-# print(dataset.describe())
+print(dataset.describe())
 
-# print(dataset.columns)
+print(dataset.columns)
 
-scaler = StandardScaler()
+
+'''
+
+# scaler = StandardScaler()
 
 scale_vars = ['Rooms', 'Price', 'Distance', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 'BuildingArea', 'Propertycount']
 x_vars = ['Rooms', 'Distance', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 'BuildingArea', 'Propertycount']
@@ -303,3 +308,5 @@ model.add(Layer(10, 10))
 model.train(dataset_x_train, dataset_y_train, 40, 1000)
 
 print(f'final average loss: {model.test(dataset_x_test, dataset_y_test)}')
+
+'''
