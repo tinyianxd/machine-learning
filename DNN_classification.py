@@ -86,8 +86,8 @@ class Unit:
         return 1 / (1 + np.exp(-x))
     
     def scale_gradient(self, mul):
-        for w in self.gw:
-            w *= mul
+        for i, w in enumerate(self.gw):
+            self.gw[i] *= mul
         self.gb *= mul
         # self.gc *= mul
     
@@ -148,11 +148,13 @@ class Layer:
         for unit in self.units:
             res, dx = unit.compute(X)
             y.append(res)
-            for _dx, _dfdx in zip(dx, tmp):
-                _dfdx.append(_dx)
+            for i, _dx in enumerate(dx):
+                tmp[i].append(_dx)
+            # for _dx, _dfdx in zip(dx, tmp):
+            #     _dfdx.append(_dx)
         
-        for i in tmp:
-            i = np.array(i)
+        # for i in tmp:
+        #     i = np.array(i)
         self.X_dfdx = np.array(tmp)
                  
         return np.array(y)
