@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 import random
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
 
 dataset_path = 'data.csv'
 
@@ -21,6 +24,8 @@ x_vars = ['radius_mean', 'texture_mean', 'perimeter_mean',
        'perimeter_worst', 'area_worst', 'smoothness_worst',
        'compactness_worst', 'concavity_worst', 'concave points_worst',
        'symmetry_worst', 'fractal_dimension_worst']
+
+dataset[x_vars] = scaler.fit_transform(dataset[x_vars])
 
 y_vars = 'diagnosis'
 
