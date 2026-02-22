@@ -56,7 +56,7 @@ dataset_x, dataset_y = shuffle_data(dataset_x, dataset_y)
 # for i in range(5):
 #     print(dataset_x[i], dataset_y[i])
 
-test_size = 50
+test_size = 80
 
 dataset_x_train = dataset_x[:-test_size]
 dataset_x_test = dataset_x[-test_size:]
@@ -164,7 +164,7 @@ class Model:
         self.layers = []
         self.weight = np.array([])
         self.bias = 0
-        self.learning_rate = 1e-5
+        self.learning_rate = 1e-4
         self.threshold = 10
         self.momentum_weight = np.array([])
         self.momentum_bias = 0
@@ -287,7 +287,7 @@ class Model:
         self.weight -= self.momentum_weight * scale
         self.bias -= self.momentum_bias * scale
         self.update_theta(scale)
-        return accuracy*100
+        return accuracy*100, loss
 
     
     def train(self, training_X, training_y, batch_size, epochs):
@@ -298,7 +298,7 @@ class Model:
             training_X, training_y = shuffle_data(training_X, training_y)
             batch_X = []
             batch_y = []
-            
+            cost = 0
             for X, y in zip(training_X, training_y):
                 counter = 0
                 if len(batch_X) < batch_size:
@@ -307,16 +307,18 @@ class Model:
                 else:
                     batch_X = np.array(batch_X)
                     batch_y = np.array(batch_y)
-                    average_accuracy += self.train_step(zip(batch_X, batch_y), batch_size)
+                    acc, loss = self.train_step(zip(batch_X, batch_y), batch_size)
+                    average_accuracy += acc
+                    cost += loss
                     counter += 1
                     batch_y = []
 
-            print(f'step {e+1}, average_accuracy: {average_accuracy/counter}%')
+            print(f'step {e+1}, average accuracy/cost: {average_accuracy/counter}% / {cost/counter}')
         return
     
     def test(self, data_X, data_y):
         data_size = len(data_X)
-        # loss = 0
+        loss = 0
         accuracy = 0
         for X, y in zip(data_X, data_y):
             z = self.sigmoid(self.evaluate(X))
@@ -324,9 +326,9 @@ class Model:
                 accuracy += 1
             if z < 0.5 and y == 0:
                 accuracy += 1
-            # loss += self.cost(self.evaluate(X), y) / data_size
+            loss += self.cost(self.evaluate(X), y, type='cross-entropy') / data_size
         accuracy /= data_size
-        return accuracy * 100
+        return accuracy * 100, loss
     
     
 model = Model()
@@ -337,9 +339,10 @@ model.add(Layer(10, 10))
 model.add(Layer(10, 10))
 
 
-model.train(dataset_x_train, dataset_y_train, 10, 100)
+model.train(dataset_x_train, dataset_y_train, 45, 1000)
 
-print(f'final average accuracy: {model.test(dataset_x_test, dataset_y_test)}%')
+accuracy, cost = model.test(dataset_x_test, dataset_y_test)
+print(f'final average accuracy/cost: {accuracy}% / {cost}')
 
 '''
 '''
