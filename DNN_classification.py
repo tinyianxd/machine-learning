@@ -1,30 +1,30 @@
 import pandas as pd
 import numpy as np
 import random
-# from sklearn.preprocessing import StandardScaler
 
 dataset_path = 'data.csv'
 
-
-
-print(dataset_path)
+# print(dataset_path)
 
 dataset = pd.read_csv(dataset_path)
-print(dataset.describe())
+# print(dataset.describe())
 
-print(dataset.columns)
+# print(dataset.columns)
 
+ale_vars = ['Rooms', 'Price', 'Distance', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 'BuildingArea', 'Propertycount']
+x_vars = ['radius_mean', 'texture_mean', 'perimeter_mean',
+       'area_mean', 'smoothness_mean', 'compactness_mean', 'concavity_mean',
+       'concave points_mean', 'symmetry_mean', 'fractal_dimension_mean',
+       'radius_se', 'texture_se', 'perimeter_se', 'area_se', 'smoothness_se',
+       'compactness_se', 'concavity_se', 'concave points_se', 'symmetry_se',
+       'fractal_dimension_se', 'radius_worst', 'texture_worst',
+       'perimeter_worst', 'area_worst', 'smoothness_worst',
+       'compactness_worst', 'concavity_worst', 'concave points_worst',
+       'symmetry_worst', 'fractal_dimension_worst']
 
-'''
+y_vars = 'diagnosis'
 
-# scaler = StandardScaler()
-
-scale_vars = ['Rooms', 'Price', 'Distance', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 'BuildingArea', 'Propertycount']
-x_vars = ['Rooms', 'Distance', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 'BuildingArea', 'Propertycount']
-y_vars = 'Price'
-
-
-dataset[scale_vars] = scaler.fit_transform(dataset[scale_vars])
+# dataset[scale_vars] = scaler.fit_transform(dataset[scale_vars])
 
 dataset_x = []
 tmp = [[] for i in range(len(dataset[x_vars[0]]))]
@@ -39,6 +39,13 @@ for data in tmp:
 
 dataset_y = dataset[y_vars]
 
+def edit(var):
+    if var == 'M':
+        return 0
+    return 1
+
+dataset_y = list(map(edit, dataset_y))
+
 def shuffle_data(data_x, data_y):
     tmp = list(zip(data_x, data_y))
     random.shuffle(tmp)
@@ -49,7 +56,7 @@ dataset_x, dataset_y = shuffle_data(dataset_x, dataset_y)
 # for i in range(5):
 #     print(dataset_x[i], dataset_y[i])
 
-test_size = 100
+test_size = 50
 
 dataset_x_train = dataset_x[:-test_size]
 dataset_x_test = dataset_x[-test_size:]
@@ -186,9 +193,16 @@ class Model:
     def add(self, layer):
         self.layers.append(layer)
     
-    def cost(self, x, y):
-        return (x - y)**2
-    
+    def cost(self, x, y, type):
+        if type == 'mse':
+            return (x - y)**2
+        if type == 'cross-entropy':
+            return -y * np.log(x)
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
+
     def update_gradient(self, mul):
         for layer in self.layers:
             for unit in layer.units:
@@ -203,9 +217,10 @@ class Model:
             X = layer.compute(X)
 
         y_p = X.dot(self.weight) + self.bias
-        dselfw = 2*(y_p - data_y)*X
-        dselfb = 2*(y_p - data_y)
-        dx = 2*(y_p - data_y)*self.weight
+        dcz = -data_y * (1 - self.sigmoid(y_p))
+        dselfw = dcz * X
+        dselfb = dcz
+        dx = dcz*self.weight
 
         dcost_df = [np.array([]) for i in range(len(self.layers))]
         dcost_df[-1] = dx
@@ -241,13 +256,20 @@ class Model:
 
     def train_step(self, training_data, data_size):
         loss = 0
+        accuracy = 0
         gsw = np.zeros(self.weight.shape)
         gsb = 0
         for X, y in training_data:
             prediction, dsw, dsb = self.predict_derivative(X, y)
+            prediction = self.sigmoid(prediction)
             gsw += dsw
             gsb += dsb
-            loss += self.cost(prediction, y) / data_size
+            loss += self.cost(prediction, y, type='cross-entropy') / data_size
+            if prediction > 0.5 and y == 1:
+                accuracy += 1
+            if prediction < 0.5 and y == 0:
+                accuracy += 1
+        accuracy /= data_size
         norm = gsb**2
         for w in gsw:
             norm += w**2
@@ -264,14 +286,14 @@ class Model:
         self.weight -= self.momentum_weight * scale
         self.bias -= self.momentum_bias * scale
         self.update_theta(scale)
-        return loss
+        return accuracy
 
     
     def train(self, training_X, training_y, batch_size, epochs):
         self.weight = np.zeros(self.layers[-1].unit_size)
         self.momentum_weight = np.zeros(self.weight.shape)
         for e in range(epochs):
-            total_loss = 0
+            average_accuracy = 0
             training_X, training_y = shuffle_data(training_X, training_y)
             batch_X = []
             batch_y = []
@@ -282,31 +304,38 @@ class Model:
                 else:
                     batch_X = np.array(batch_X)
                     batch_y = np.array(batch_y)
-                    total_loss += self.train_step(zip(batch_X, batch_y), batch_size) / len(training_X) * batch_size
+                    average_accuracy += self.train_step(zip(batch_X, batch_y), batch_size) / batch_size * 100
                     batch_X = []
                     batch_y = []
 
-            print(f'step {e+1}, average_loss: {total_loss}')
+            print(f'step {e+1}, average_accuracy: {average_accuracy}%')
         return
     
     def test(self, data_X, data_y):
         data_size = len(data_X)
-        loss = 0
+        # loss = 0
+        accuracy = 0
         for X, y in zip(data_X, data_y):
-            loss += self.cost(self.evaluate(X), y) / data_size
-
-        return loss
+            z = self.sigmoid(self.evaluate(X))
+            if z > 0.5 and y == 1:
+                accuracy += 1
+            if z < 0.5 and y == 0:
+                accuracy += 1
+            # loss += self.cost(self.evaluate(X), y) / data_size
+        accuracy /= data_size
+        return accuracy * 100
     
     
 model = Model()
-model.add(Layer(len(x_vars), 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
+model.add(Layer(len(x_vars), 40))
+model.add(Layer(40, 40))
+model.add(Layer(40, 40))
+model.add(Layer(40, 40))
+model.add(Layer(40, 40))
 
 model.train(dataset_x_train, dataset_y_train, 40, 1000)
 
-print(f'final average loss: {model.test(dataset_x_test, dataset_y_test)}')
+print(f'final average accuracy: {model.test(dataset_x_test, dataset_y_test)}%')
 
+'''
 '''
