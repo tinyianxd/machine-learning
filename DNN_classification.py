@@ -164,7 +164,7 @@ class Model:
         self.layers = []
         self.weight = np.array([])
         self.bias = 0
-        self.learning_rate = 0.005
+        self.learning_rate = 1e-5
         self.threshold = 10
         self.momentum_weight = np.array([])
         self.momentum_bias = 0
@@ -330,13 +330,22 @@ class Model:
     
     
 model = Model()
-model.add(Layer(len(x_vars), 60))
-model.add(Layer(60, 60))
-model.add(Layer(60, 60))
+model.add(Layer(len(x_vars), 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
 
 
 
-model.train(dataset_x_train, dataset_y_train, 25, 200)
+
+model.train(dataset_x_train, dataset_y_train, 10, 100)
 
 print(f'final average accuracy: {model.test(dataset_x_test, dataset_y_test)}%')
 
