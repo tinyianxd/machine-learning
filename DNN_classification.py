@@ -68,8 +68,8 @@ class Unit:
     def __init__(self, x_len):
         self.x_len = x_len
         self.weight = np.random.randn(x_len)
-        self.bias = 0
-        self.relu_c = 1
+        self.bias = random.random()
+        self.relu_c = random.random()
         self.dw = np.zeros(self.weight.shape)
         self.db = 0
         self.dc = 0
@@ -164,7 +164,7 @@ class Model:
         self.layers = []
         self.weight = np.array([])
         self.bias = 0
-        self.learning_rate = 0.01
+        self.learning_rate = 0.005
         self.threshold = 10
         self.momentum_weight = np.array([])
         self.momentum_bias = 0
@@ -217,7 +217,8 @@ class Model:
             X = layer.compute(X)
 
         y_p = X.dot(self.weight) + self.bias
-        dcz = -data_y * (1 - self.sigmoid(y_p))
+        y_p = self.sigmoid(y_p)
+        dcz = -data_y * (1 - y_p)
         dselfw = dcz * X
         dselfb = dcz
         dx = dcz*self.weight
@@ -261,7 +262,6 @@ class Model:
         gsb = 0
         for X, y in training_data:
             prediction, dsw, dsb = self.predict_derivative(X, y)
-            prediction = self.sigmoid(prediction)
             gsw += dsw
             gsb += dsb
             loss += self.cost(prediction, y, type='cross-entropy') / data_size
@@ -270,6 +270,7 @@ class Model:
             if prediction < 0.5 and y == 0:
                 accuracy += 1
         accuracy /= data_size
+
         norm = gsb**2
         for w in gsw:
             norm += w**2
@@ -286,7 +287,7 @@ class Model:
         self.weight -= self.momentum_weight * scale
         self.bias -= self.momentum_bias * scale
         self.update_theta(scale)
-        return accuracy
+        return accuracy*100
 
     
     def train(self, training_X, training_y, batch_size, epochs):
@@ -297,18 +298,20 @@ class Model:
             training_X, training_y = shuffle_data(training_X, training_y)
             batch_X = []
             batch_y = []
+            
             for X, y in zip(training_X, training_y):
+                counter = 0
                 if len(batch_X) < batch_size:
                     batch_X.append(X)
                     batch_y.append(y)
                 else:
                     batch_X = np.array(batch_X)
                     batch_y = np.array(batch_y)
-                    average_accuracy += self.train_step(zip(batch_X, batch_y), batch_size) / batch_size * 100
-                    batch_X = []
+                    average_accuracy += self.train_step(zip(batch_X, batch_y), batch_size)
+                    counter += 1
                     batch_y = []
 
-            print(f'step {e+1}, average_accuracy: {average_accuracy}%')
+            print(f'step {e+1}, average_accuracy: {average_accuracy/counter}%')
         return
     
     def test(self, data_X, data_y):
@@ -327,13 +330,13 @@ class Model:
     
     
 model = Model()
-model.add(Layer(len(x_vars), 40))
-model.add(Layer(40, 40))
-model.add(Layer(40, 40))
-model.add(Layer(40, 40))
-model.add(Layer(40, 40))
+model.add(Layer(len(x_vars), 60))
+model.add(Layer(60, 60))
+model.add(Layer(60, 60))
 
-model.train(dataset_x_train, dataset_y_train, 40, 1000)
+
+
+model.train(dataset_x_train, dataset_y_train, 25, 200)
 
 print(f'final average accuracy: {model.test(dataset_x_test, dataset_y_test)}%')
 
