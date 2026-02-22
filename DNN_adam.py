@@ -3,12 +3,6 @@ import numpy as np
 import random
 from sklearn.preprocessing import StandardScaler
 
-
-# test commit 1
-
-# merge conflict fix
-
-
 dataset_path = 'selfcode\melb_data.csv'
 
 # print(dataset_path)
