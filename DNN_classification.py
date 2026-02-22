@@ -95,7 +95,7 @@ class Unit:
         return 1 / (1 + np.exp(-x))
     
     def scale_gradient(self, mul):
-        for i, w in enumerate(self.gw):
+        for i in range(len(self.gw)):
             self.gw[i] *= mul
         self.gb *= mul
         # self.gc *= mul
@@ -179,8 +179,8 @@ class Model:
         self.layers = []
         self.weight = np.array([])
         self.bias = random.random()
-        self.learning_rate = 1e-4
-        self.threshold = 10
+        self.learning_rate = 1e-3
+        # self.threshold = 10
         self.momentum_weight = np.array([])
         self.momentum_bias = 0
         self.beta1 = 0.9
@@ -231,7 +231,7 @@ class Model:
 
         y_p = X.dot(self.weight) + self.bias
         y_p = self.sigmoid(y_p)
-        dcz = (data_y - y_p)
+        dcz = (y_p - data_y)
         dselfw = dcz * X
         dselfb = dcz
         dx = dcz*self.weight
