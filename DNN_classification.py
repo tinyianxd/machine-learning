@@ -1,9 +1,7 @@
 import pandas as pd
 import numpy as np
 import random
-from sklearn.preprocessing import StandardScaler
 
-scaler = StandardScaler()
 
 dataset_path = 'data.csv'
 
@@ -25,11 +23,8 @@ x_vars = ['radius_mean', 'texture_mean', 'perimeter_mean',
        'compactness_worst', 'concavity_worst', 'concave points_worst',
        'symmetry_worst', 'fractal_dimension_worst']
 
-dataset[x_vars] = scaler.fit_transform(dataset[x_vars])
 
 y_vars = 'diagnosis'
-
-# dataset[scale_vars] = scaler.fit_transform(dataset[scale_vars])
 
 dataset_x = []
 tmp = [[] for i in range(len(dataset[x_vars[0]]))]
@@ -40,6 +35,14 @@ for var in x_vars:
 
 for data in tmp:
     dataset_x.append(np.array(data))
+
+#scale
+
+for i, data in enumerate(dataset_x):
+    _mean = np.mean(data)
+    _std = np.std(data)
+    dataset_x[i] -= _mean
+    dataset_x[i] /= _std
 
 
 dataset_y = dataset[y_vars]
@@ -352,6 +355,8 @@ class Model:
     
 model = Model()
 model.add(Layer(len(x_vars), 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
 model.add(Layer(10, 10))
 model.add(Layer(10, 10))
 
