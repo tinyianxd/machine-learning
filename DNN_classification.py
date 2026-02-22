@@ -164,7 +164,7 @@ class Model:
         self.layers = []
         self.weight = np.array([])
         self.bias = 0
-        self.learning_rate = 1e-5
+        self.learning_rate = 1e-4
         self.threshold = 10
         self.momentum_weight = np.array([])
         self.momentum_bias = 0
@@ -339,7 +339,7 @@ model.add(Layer(10, 10))
 model.add(Layer(10, 10))
 
 
-model.train(dataset_x_train, dataset_y_train, 20, 1000)
+model.train(dataset_x_train, dataset_y_train, 45, 1000)
 
 accuracy, cost = model.test(dataset_x_test, dataset_y_test)
 print(f'final average accuracy/cost: {accuracy}% / {cost}')
