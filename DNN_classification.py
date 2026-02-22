@@ -69,30 +69,38 @@ class Unit:
         self.x_len = x_len
         self.weight = np.random.randn(x_len)
         self.bias = random.random()
-        self.relu_c = random.random()
+        # self.relu_c = random.random()
         self.dw = np.zeros(self.weight.shape)
         self.db = 0
-        self.dc = 0
+        # self.dc = 0
         self.gw = np.zeros(self.weight.shape)
         self.gb = 0
-        self.gc = 0
+        # self.gc = 0
         self.mw = np.zeros(self.weight.shape)
         self.mb = 0
-        self.mc = 0
+        # self.mc = 0
          
         return
+    
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
     
     def scale_gradient(self, mul):
         for w in self.gw:
             w *= mul
         self.gb *= mul
-        self.gc *= mul
+        # self.gc *= mul
     
     def evaluate(self, X):
-        return max(X.dot(self.weight) + self.bias, 0) * self.relu_c
+        return max(X.dot(self.weight) + self.bias, 0)
 
     def compute(self, X):
-        tmp = X.dot(self.weight) + self.bias
+        tmp = self.sigmoid(X.dot(self.weight) + self.bias)
+        dtmp = tmp * (1 - tmp)
+        self.dw = X * dtmp
+        self.db = dtmp
+        return tmp, self.weight * dtmp
+        '''
         if tmp > 0:
             self.dw = X * self.relu_c
             self.db = self.relu_c
@@ -102,32 +110,28 @@ class Unit:
         self.db = 0
         self.dc = 0
         return 0, np.zeros(self.weight.shape)
+        '''
     
     def update_gradient(self, mul):
         self.gw += self.dw * mul
         self.dw = 0
         self.gb += self.db * mul
         self.db = 0
-        self.gc += self.dc * mul
-        self.dc = 0
         return
     
     def update_momentum(self, beta1):
         self.mw = self.mw * beta1 + (1 - beta1) * self.gw
         self.mb = self.mb * beta1 + (1 - beta1) * self.gb
-        self.mc = self.mc * beta1 + (1 - beta1) * self.gc
         self.gw = np.zeros(self.weight.shape)
         self.gb = 0
-        self.gc = 0
         return
 
     def gradient_norm(self):
-        res = self.gb**2 + self.gc**2
+        res = self.gb**2
         for w in self.gw:
             res += w**2
         return res
-
-
+    
 class Layer:
     def __init__(self, X_size, unit_num):
         self.X_size = X_size
@@ -163,7 +167,7 @@ class Model:
     def __init__(self):
         self.layers = []
         self.weight = np.array([])
-        self.bias = 0
+        self.bias = random.random()
         self.learning_rate = 1e-4
         self.threshold = 10
         self.momentum_weight = np.array([])
@@ -246,7 +250,6 @@ class Model:
             for unit in layer.units:
                 unit.weight -= unit.mw * scale
                 unit.bias -= unit.mb * scale
-                unit.relu_c -= unit.mc * scale
     
     def update_momentum(self, gsw, gsb):
         self.momentum_weight = self.momentum_weight * self.beta1 + (1 - self.beta1) * gsw
@@ -332,14 +335,14 @@ class Model:
     
     
 model = Model()
-model.add(Layer(len(x_vars), 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
+model.add(Layer(len(x_vars), 20))
+model.add(Layer(20, 20))
+model.add(Layer(20, 20))
+model.add(Layer(20, 20))
+model.add(Layer(20, 20))
 
 
-model.train(dataset_x_train, dataset_y_train, 45, 1000)
+model.train(dataset_x_train, dataset_y_train, 40, 1000)
 
 accuracy, cost = model.test(dataset_x_test, dataset_y_test)
 print(f'final average accuracy/cost: {accuracy}% / {cost}')
