@@ -13,14 +13,7 @@ dataset = pd.read_csv(dataset_path)
 
 ale_vars = ['Rooms', 'Price', 'Distance', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 'BuildingArea', 'Propertycount']
 x_vars = ['radius_mean', 'texture_mean', 'perimeter_mean',
-       'area_mean', 'smoothness_mean', 'compactness_mean', 'concavity_mean',
-       'concave points_mean', 'symmetry_mean', 'fractal_dimension_mean',
-       'radius_se', 'texture_se', 'perimeter_se', 'area_se', 'smoothness_se',
-       'compactness_se', 'concavity_se', 'concave points_se', 'symmetry_se',
-       'fractal_dimension_se', 'radius_worst', 'texture_worst',
-       'perimeter_worst', 'area_worst', 'smoothness_worst',
-       'compactness_worst', 'concavity_worst', 'concave points_worst',
-       'symmetry_worst', 'fractal_dimension_worst']
+       'area_mean', 'smoothness_mean']
 
 y_vars = 'diagnosis'
 
@@ -164,7 +157,7 @@ class Model:
         self.layers = []
         self.weight = np.array([])
         self.bias = 0
-        self.learning_rate = 0.005
+        self.learning_rate = 1e-5
         self.threshold = 10
         self.momentum_weight = np.array([])
         self.momentum_bias = 0
@@ -330,13 +323,19 @@ class Model:
     
     
 model = Model()
-model.add(Layer(len(x_vars), 60))
-model.add(Layer(60, 60))
-model.add(Layer(60, 60))
+model.add(Layer(len(x_vars), 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
+model.add(Layer(10, 10))
 
 
-
-model.train(dataset_x_train, dataset_y_train, 25, 200)
+model.train(dataset_x_train, dataset_y_train, 20, 100)
 
 print(f'final average accuracy: {model.test(dataset_x_test, dataset_y_test)}%')
 
