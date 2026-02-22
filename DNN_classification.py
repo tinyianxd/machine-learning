@@ -87,6 +87,10 @@ class Unit:
          
         return
     
+    def update_theta(self, scale):
+        self.weight -= self.mw * scale
+        self.bias -= self.mb * scale
+    
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
     
@@ -97,10 +101,10 @@ class Unit:
         # self.gc *= mul
     
     def evaluate(self, X):
-        return max(X.dot(self.weight) + self.bias, 0)
+        return self.sigmoid(X.dot(self.weight) + self.bias)
 
     def compute(self, X):
-        tmp = self.sigmoid(X.dot(self.weight) + self.bias)
+        tmp = self.evaluate(X)
         dtmp = tmp * (1 - tmp)
         self.dw = X * dtmp
         self.db = dtmp
@@ -191,8 +195,6 @@ class Model:
         for layer in self.layers:
             for unit in layer.units:
                 norm += unit.gradient_norm()
-        
-        norm = np.sqrt(norm)
         return norm
         
 
@@ -215,9 +217,9 @@ class Model:
 
 
     def update_gradient(self, mul):
-        for layer in self.layers:
-            for unit in layer.units:
-                unit.update_gradient(mul)
+        for i in range(len(self.layers)):
+            for j in range(len(self.layers[i].units)):
+                self.layers[i].units[j].update_gradient(mul)
     
     def predict_derivative(self, data_X, data_y):
         dselfw = np.array([])
@@ -246,24 +248,31 @@ class Model:
                 dcost_df[layer-1] = np.append(dcost_df[layer-1], fx.dot(dcost_df[layer]))
 
         
-        for layer, dcdf_ in zip(self.layers, dcost_df):
-            for unit, dcdf in zip(layer.units, dcdf_):
-                unit.update_gradient(dcdf)
+        # for layer, dcdf_ in zip(self.layers, dcost_df):
+        #     for unit, dcdf in zip(layer.units, dcdf_):
+        #         unit.update_gradient(dcdf)
+        for i in range(len(self.layers)):
+            for j in range(len(self.layers[i].units)):
+                self.layers[i].units[j].update_gradient(dcost_df[i][j])
 
         return y_p, dselfw, dselfb
     
     def update_theta(self, scale):
-        for layer in self.layers:
-            for unit in layer.units:
-                unit.weight -= unit.mw * scale
-                unit.bias -= unit.mb * scale
+        for i in range(len(self.layers)):
+            for j in range(len(self.layers[i].units)):
+                self.layers[i].units[j].update_theta(scale)
+                # unit.weight -= unit.mw * scale
+                # unit.bias -= unit.mb * scale
     
     def update_momentum(self, gsw, gsb):
         self.momentum_weight = self.momentum_weight * self.beta1 + (1 - self.beta1) * gsw
         self.momentum_bias = self.momentum_bias * self.beta1 + (1 - self.beta1) * gsb
-        for layer in self.layers:
-            for unit in layer.units:
-                unit.update_momentum(self.beta1)
+        # for layer in self.layers:
+        #     for unit in layer.units:
+        #         unit.update_momentum(self.beta1)
+        for i in range(len(self.layers)):
+            for j in range(len(self.layers[i].units)):
+                self.layers[i].units[j].update_momentum(self.beta1)
 
     def train_step(self, training_data, data_size):
         loss = 0
