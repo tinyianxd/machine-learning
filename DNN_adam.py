@@ -1,25 +1,19 @@
 import pandas as pd
 import numpy as np
 import random
-from sklearn.preprocessing import StandardScaler
 
-dataset_path = 'selfcode\melb_data.csv'
-
-# print(dataset_path)
+dataset_path = 'melb_data.csv'
 
 dataset = pd.read_csv(dataset_path)
-# print(dataset.describe())
-
-# print(dataset.columns)
-
-scaler = StandardScaler()
 
 scale_vars = ['Rooms', 'Price', 'Distance', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 'BuildingArea', 'Propertycount']
 x_vars = ['Rooms', 'Distance', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 'BuildingArea', 'Propertycount']
 y_vars = 'Price'
 
-
-dataset[scale_vars] = scaler.fit_transform(dataset[scale_vars])
+for var in scale_vars:
+    _mean = np.mean(dataset[var])
+    _std = np.std(dataset[var])
+    dataset[var] = (dataset[var] - _mean) / _std
 
 dataset_x = []
 tmp = [[] for i in range(len(dataset[x_vars[0]]))]
@@ -41,9 +35,6 @@ def shuffle_data(data_x, data_y):
 
 dataset_x, dataset_y = shuffle_data(dataset_x, dataset_y)
 
-# for i in range(5):
-#     print(dataset_x[i], dataset_y[i])
-
 test_size = 100
 
 dataset_x_train = dataset_x[:-test_size]
@@ -57,38 +48,31 @@ class Unit:
         self.x_len = x_len
         self.weight = np.random.randn(x_len)
         self.bias = 0
-        self.relu_c = 1
         self.dw = np.zeros(self.weight.shape)
         self.db = 0
-        self.dc = 0
         self.gw = np.zeros(self.weight.shape)
         self.gb = 0
-        self.gc = 0
         self.mw = np.zeros(self.weight.shape)
         self.mb = 0
-        self.mc = 0
          
         return
     
     def scale_gradient(self, mul):
-        for w in self.gw:
-            w *= mul
+        for i in range(len(self.gw)):
+            self.gw[i] *= mul
         self.gb *= mul
-        self.gc *= mul
     
     def evaluate(self, X):
-        return max(X.dot(self.weight) + self.bias, 0) * self.relu_c
+        return max(X.dot(self.weight) + self.bias, 0)
 
     def compute(self, X):
         tmp = X.dot(self.weight) + self.bias
         if tmp > 0:
-            self.dw = X * self.relu_c
-            self.db = self.relu_c
-            self.dc = tmp
-            return tmp * self.relu_c, self.weight * self.relu_c # res, dw, db, dc, dx
+            self.dw = X
+            self.db = 1
+            return tmp, self.weight
         self.dw = np.zeros(self.weight.shape)
         self.db = 0
-        self.dc = 0
         return 0, np.zeros(self.weight.shape)
     
     def update_gradient(self, mul):
@@ -96,24 +80,25 @@ class Unit:
         self.dw = 0
         self.gb += self.db * mul
         self.db = 0
-        self.gc += self.dc * mul
-        self.dc = 0
         return
     
     def update_momentum(self, beta1):
         self.mw = self.mw * beta1 + (1 - beta1) * self.gw
         self.mb = self.mb * beta1 + (1 - beta1) * self.gb
-        self.mc = self.mc * beta1 + (1 - beta1) * self.gc
         self.gw = np.zeros(self.weight.shape)
         self.gb = 0
-        self.gc = 0
         return
 
     def gradient_norm(self):
-        res = self.gb**2 + self.gc**2
+        res = self.gb**2
         for w in self.gw:
             res += w**2
         return res
+    
+    def update_theta(self, scale):
+        self.weight -= self.mw * scale
+        self.bias -= self.mb * scale
+        return
 
 
 class Layer:
@@ -153,7 +138,6 @@ class Model:
         self.weight = np.array([])
         self.bias = 0
         self.learning_rate = 0.01
-        self.threshold = 10
         self.momentum_weight = np.array([])
         self.momentum_bias = 0
         self.beta1 = 0.9
@@ -168,8 +152,6 @@ class Model:
         for layer in self.layers:
             for unit in layer.units:
                 norm += unit.gradient_norm()
-        
-        norm = np.sqrt(norm)
         return norm
         
 
@@ -185,9 +167,12 @@ class Model:
         return (x - y)**2
     
     def update_gradient(self, mul):
-        for layer in self.layers:
-            for unit in layer.units:
-                unit.update_gradient(mul)
+        for i in range(len(self.layers)):
+            for j in range(len(self.layers[i].units)):
+                self.layers[i].units[j].update_gradient(mul)
+        # for layer in self.layers:
+        #     for unit in layer.units:
+        #         unit.update_gradient(mul)
     
     def predict_derivative(self, data_X, data_y):
         dselfw = np.array([])
@@ -214,25 +199,33 @@ class Model:
                 dcost_df[layer-1] = np.append(dcost_df[layer-1], fx.dot(dcost_df[layer]))
 
         
-        for layer, dcdf_ in zip(self.layers, dcost_df):
-            for unit, dcdf in zip(layer.units, dcdf_):
-                unit.update_gradient(dcdf)
+        # for layer, dcdf_ in zip(self.layers, dcost_df):
+        #     for unit, dcdf in zip(layer.units, dcdf_):
+        #         unit.update_gradient(dcdf)
+        for i, dcdf_ in enumerate(dcost_df):
+            for j, dcdf in enumerate(dcdf_):
+                self.layers[i].units[j].update_gradient(dcdf)
 
         return y_p, dselfw, dselfb
     
     def update_theta(self, scale):
-        for layer in self.layers:
-            for unit in layer.units:
-                unit.weight -= unit.mw * scale
-                unit.bias -= unit.mb * scale
-                unit.relu_c -= unit.mc * scale
+        # for layer in self.layers:
+        #     for unit in layer.units:
+        #         unit.weight -= unit.mw * scale
+        #         unit.bias -= unit.mb * scale
+        for i in range(len(self.layers)):
+            for j in range(len(self.layers[i].units)):
+                self.layers[i].units[j].update_theta(scale)
     
     def update_momentum(self, gsw, gsb):
         self.momentum_weight = self.momentum_weight * self.beta1 + (1 - self.beta1) * gsw
         self.momentum_bias = self.momentum_bias * self.beta1 + (1 - self.beta1) * gsb
-        for layer in self.layers:
-            for unit in layer.units:
-                unit.update_momentum(self.beta1)
+        # for layer in self.layers:
+        #     for unit in layer.units:
+        #         unit.update_momentum(self.beta1)
+        for i in range(len(self.layers)):
+            for j in range(len(self.layers[i].units)):
+                self.layers[i].units[j].update_momentum(self.beta1)
 
     def train_step(self, training_data, data_size):
         loss = 0
@@ -296,9 +289,7 @@ class Model:
 model = Model()
 model.add(Layer(len(x_vars), 10))
 model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
+
 
 model.train(dataset_x_train, dataset_y_train, 40, 1000)
 
