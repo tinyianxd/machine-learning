@@ -170,9 +170,6 @@ class Model:
         for i in range(len(self.layers)):
             for j in range(len(self.layers[i].units)):
                 self.layers[i].units[j].update_gradient(mul)
-        # for layer in self.layers:
-        #     for unit in layer.units:
-        #         unit.update_gradient(mul)
     
     def predict_derivative(self, data_X, data_y):
         dselfw = np.array([])
@@ -198,10 +195,6 @@ class Model:
             for fx in self.layers[layer].X_dfdx:
                 dcost_df[layer-1] = np.append(dcost_df[layer-1], fx.dot(dcost_df[layer]))
 
-        
-        # for layer, dcdf_ in zip(self.layers, dcost_df):
-        #     for unit, dcdf in zip(layer.units, dcdf_):
-        #         unit.update_gradient(dcdf)
         for i, dcdf_ in enumerate(dcost_df):
             for j, dcdf in enumerate(dcdf_):
                 self.layers[i].units[j].update_gradient(dcdf)
@@ -209,10 +202,6 @@ class Model:
         return y_p, dselfw, dselfb
     
     def update_theta(self, scale):
-        # for layer in self.layers:
-        #     for unit in layer.units:
-        #         unit.weight -= unit.mw * scale
-        #         unit.bias -= unit.mb * scale
         for i in range(len(self.layers)):
             for j in range(len(self.layers[i].units)):
                 self.layers[i].units[j].update_theta(scale)
@@ -220,9 +209,6 @@ class Model:
     def update_momentum(self, gsw, gsb):
         self.momentum_weight = self.momentum_weight * self.beta1 + (1 - self.beta1) * gsw
         self.momentum_bias = self.momentum_bias * self.beta1 + (1 - self.beta1) * gsb
-        # for layer in self.layers:
-        #     for unit in layer.units:
-        #         unit.update_momentum(self.beta1)
         for i in range(len(self.layers)):
             for j in range(len(self.layers[i].units)):
                 self.layers[i].units[j].update_momentum(self.beta1)
@@ -282,7 +268,6 @@ class Model:
         loss = 0
         for X, y in zip(data_X, data_y):
             loss += self.cost(self.evaluate(X), y) / data_size
-
         return loss
     
     
@@ -291,6 +276,6 @@ model.add(Layer(len(x_vars), 10))
 model.add(Layer(10, 10))
 
 
-model.train(dataset_x_train, dataset_y_train, 40, 1000)
+model.train(dataset_x_train, dataset_y_train, 40, 100)
 
 print(f'final average loss: {model.test(dataset_x_test, dataset_y_test)}')
