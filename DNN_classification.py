@@ -319,6 +319,3 @@ model.train(dataset_x_train, dataset_y_train, 40, 800)
 
 accuracy, cost = model.test(dataset_x_test, dataset_y_test)
 print(f'final average accuracy/cost: {accuracy}% / {cost}')
-
-'''
-'''
