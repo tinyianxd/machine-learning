@@ -5,13 +5,7 @@ import random
 
 dataset_path = 'data.csv'
 
-# print(dataset_path)
-
 dataset = pd.read_csv(dataset_path)
-# print(dataset.describe())
-
-# print(dataset.columns)
-
 
 x_vars = ['radius_mean', 'texture_mean', 'perimeter_mean',
        'area_mean', 'smoothness_mean', 'compactness_mean', 'concavity_mean',
@@ -22,8 +16,6 @@ x_vars = ['radius_mean', 'texture_mean', 'perimeter_mean',
        'perimeter_worst', 'area_worst', 'smoothness_worst',
        'compactness_worst', 'concavity_worst', 'concave points_worst',
        'symmetry_worst', 'fractal_dimension_worst']
-
-#scale
 
 for var in x_vars:
     _mean = np.mean(dataset[var])
@@ -60,9 +52,6 @@ def shuffle_data(data_x, data_y):
 
 dataset_x, dataset_y = shuffle_data(dataset_x, dataset_y)
 
-# for i in range(5):
-#     print(dataset_x[i], dataset_y[i])
-
 test_size = 80
 
 dataset_x_train = dataset_x[:-test_size]
@@ -76,17 +65,12 @@ class Unit:
         self.x_len = x_len
         self.weight = np.random.randn(x_len)
         self.bias = random.random()
-        # self.relu_c = random.random()
         self.dw = np.zeros(self.weight.shape)
         self.db = 0
-        # self.dc = 0
         self.gw = np.zeros(self.weight.shape)
         self.gb = 0
-        # self.gc = 0
         self.mw = np.zeros(self.weight.shape)
         self.mb = 0
-        # self.mc = 0
-         
         return
     
     def update_theta(self, scale):
@@ -100,7 +84,6 @@ class Unit:
         for i in range(len(self.gw)):
             self.gw[i] *= mul
         self.gb *= mul
-        # self.gc *= mul
     
     def evaluate(self, X):
         return self.sigmoid(X.dot(self.weight) + self.bias)
@@ -111,17 +94,6 @@ class Unit:
         self.dw = X * dtmp
         self.db = dtmp
         return tmp, self.weight * dtmp
-        '''
-        if tmp > 0:
-            self.dw = X * self.relu_c
-            self.db = self.relu_c
-            self.dc = tmp
-            return tmp * self.relu_c, self.weight * self.relu_c # res, dw, db, dc, dx
-        self.dw = np.zeros(self.weight.shape)
-        self.db = 0
-        self.dc = 0
-        return 0, np.zeros(self.weight.shape)
-        '''
     
     def update_gradient(self, mul):
         self.gw += self.dw * mul
@@ -161,11 +133,6 @@ class Layer:
             y.append(res)
             for i, _dx in enumerate(dx):
                 tmp[i].append(_dx)
-            # for _dx, _dfdx in zip(dx, tmp):
-            #     _dfdx.append(_dx)
-        
-        # for i in tmp:
-        #     i = np.array(i)
         self.X_dfdx = np.array(tmp)
                  
         return np.array(y)
@@ -182,7 +149,6 @@ class Model:
         self.weight = np.array([])
         self.bias = random.random()
         self.learning_rate = 1e-3
-        # self.threshold = 10
         self.momentum_weight = np.array([])
         self.momentum_bias = 0
         self.beta1 = 0.9
@@ -217,7 +183,6 @@ class Model:
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
 
-
     def update_gradient(self, mul):
         for i in range(len(self.layers)):
             for j in range(len(self.layers[i].units)):
@@ -249,10 +214,6 @@ class Model:
             for fx in self.layers[layer].X_dfdx:
                 dcost_df[layer-1] = np.append(dcost_df[layer-1], fx.dot(dcost_df[layer]))
 
-        
-        # for layer, dcdf_ in zip(self.layers, dcost_df):
-        #     for unit, dcdf in zip(layer.units, dcdf_):
-        #         unit.update_gradient(dcdf)
         for i in range(len(self.layers)):
             for j in range(len(self.layers[i].units)):
                 self.layers[i].units[j].update_gradient(dcost_df[i][j])
@@ -263,15 +224,10 @@ class Model:
         for i in range(len(self.layers)):
             for j in range(len(self.layers[i].units)):
                 self.layers[i].units[j].update_theta(scale)
-                # unit.weight -= unit.mw * scale
-                # unit.bias -= unit.mb * scale
     
     def update_momentum(self, gsw, gsb):
         self.momentum_weight = self.momentum_weight * self.beta1 + (1 - self.beta1) * gsw
         self.momentum_bias = self.momentum_bias * self.beta1 + (1 - self.beta1) * gsb
-        # for layer in self.layers:
-        #     for unit in layer.units:
-        #         unit.update_momentum(self.beta1)
         for i in range(len(self.layers)):
             for j in range(len(self.layers[i].units)):
                 self.layers[i].units[j].update_momentum(self.beta1)
@@ -359,7 +315,7 @@ model.add(Layer(10, 10))
 
 
 
-model.train(dataset_x_train, dataset_y_train, 40, 1000)
+model.train(dataset_x_train, dataset_y_train, 40, 800)
 
 accuracy, cost = model.test(dataset_x_test, dataset_y_test)
 print(f'final average accuracy/cost: {accuracy}% / {cost}')
