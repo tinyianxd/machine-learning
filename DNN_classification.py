@@ -312,10 +312,11 @@ model = Model()
 model.add(Layer(len(x_vars), 10))
 model.add(Layer(10, 10))
 model.add(Layer(10, 10))
+model.add(Layer(10, 10))
 
 
 
-model.train(dataset_x_train, dataset_y_train, 40, 800)
+model.train(dataset_x_train, dataset_y_train, 40, 1000)
 
 accuracy, cost = model.test(dataset_x_test, dataset_y_test)
 print(f'final average accuracy/cost: {accuracy}% / {cost}')
