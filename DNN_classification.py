@@ -311,8 +311,6 @@ class Model:
 model = Model()
 model.add(Layer(len(x_vars), 10))
 model.add(Layer(10, 10))
-model.add(Layer(10, 10))
-model.add(Layer(10, 10))
 
 
 
